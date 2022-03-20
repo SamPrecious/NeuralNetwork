@@ -8,23 +8,8 @@ import org.ejml.simple.SimpleMatrix;
 public class MultiLayerPerceptron {
 		
 	public static void main(String[] args) {
-		/*
-		 * How to store:
-		 * 		This is brief as im not yet certain however I think
-		 * 		The left matrix changes a lot, so we probably shouldnt store this with a neuron
-		 * 		The right matrix should be stored within a neuron
-		 * 		Could store left matrix 
-		 * ACTUALLY:
-		 * 		Could store each layer. I think this makes more sense.
-		 * 		Store all weights coming in as one matrix
-		 * 		Store all biases as another 1D matrix
-		 * 		Store 
-		 */		
 		MultiLayerPerceptron predict = new MultiLayerPerceptron();
-		predict();
-		
-		
-	    
+		predict();					    
 	}
 	
 	public static void predict() {
