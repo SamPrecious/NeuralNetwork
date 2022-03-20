@@ -27,7 +27,6 @@ public class MultiLayerPerceptron {
 	    
 	}
 	
-	
 	public static void predict() {
 				//This goes over the worked example in the lecture: 
 				double[][] inputArray = {{1,0}};
@@ -49,9 +48,6 @@ public class MultiLayerPerceptron {
 			    SimpleMatrix hiddenNode = new SimpleMatrix(inputMatrix.numRows(),weightMatrix1.numCols());
 			    SimpleMatrix outputNode = new SimpleMatrix(hiddenNode.numRows(), weightMatrix2.numCols());
 			    
-			   
-
-			    
 			    double outputDelta;
 			    double[] hiddenDelta = new double[outputNode.numCols()];
 			    
@@ -60,37 +56,44 @@ public class MultiLayerPerceptron {
 			    double correctOutput = 1;
 
 			    
+			    //Initially do a forward pass to start off with
+			    hiddenNode = forwardPass(hiddenNode, inputMatrix, weightMatrix1, biasMatrix1);			    
+			    outputNode = forwardPass(outputNode, hiddenNode, weightMatrix2, biasMatrix2);	
 			    
+			    outputNode.print();
 			    
-			    
-			    hiddenNode = forwardPass(hiddenNode, inputMatrix, weightMatrix1, biasMatrix1);
-			    
-			    
+			    //This is our main loop, doing a forward pass, then a backward pass, for x number of epochs
+			    for(int i = 0; i<20000; i++) {			    				    				    
+				    
+				    //The rest is a backward pass, we need most values in this function, so there is no point creating another function for this.
+				    
+				    outputDelta  = (correctOutput - outputNode.get(0, 0))* (outputNode.get(0, 0) * (1-outputNode.get(0, 0)));
 
-			    
-			    outputNode = forwardPass(outputNode, hiddenNode, weightMatrix2, biasMatrix2);
+				    double[][] outputDeltaArray = {{outputDelta}};
+				    SimpleMatrix outputDeltaMatrix = new SimpleMatrix(outputDeltaArray);
+				    
+				    			    			    			    
+				    //Here we clone our hidden node matrix so we can get a matrix of current differentials
+				    SimpleMatrix hiddenDeltaMatrix = hiddenNode.copy();
+				    firstDifferential(hiddenDeltaMatrix);
+				    hiddenDeltaMatrix = deltaVal(hiddenDeltaMatrix, weightMatrix2, outputDeltaMatrix);		    		    		    		    			    			    		    
+				    
+				    //New weight: Old Weight + (Step Size * currentDelta * input)			    
 
-			    
-			    //The rest is a backward pass, we need most values in this function, so there is no point creating another function for this.
-			    
-			    outputDelta  = (correctOutput - outputNode.get(0, 0))* (outputNode.get(0, 0) * (1-outputNode.get(0, 0)));
+				    
+				    weightMatrix1 = updateWeight(weightMatrix1, stepSize, hiddenDeltaMatrix, inputMatrix);
+				    biasMatrix1 = updateBias(biasMatrix1, stepSize, hiddenDeltaMatrix);
+				    weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, hiddenNode);
+				    biasMatrix2 = updateBias(biasMatrix2, stepSize, outputDeltaMatrix);
+				    
+				    //Apply forward pass with updated values
+				    hiddenNode = forwardPass(hiddenNode, inputMatrix, weightMatrix1, biasMatrix1);			    
+				    outputNode = forwardPass(outputNode, hiddenNode, weightMatrix2, biasMatrix2);	
 
-			    double[][] outputDeltaArray = {{outputDelta}};
-			    SimpleMatrix outputDeltaMatrix = new SimpleMatrix(outputDeltaArray);
-			    
-			    			    			    			    
-			    //Here we clone our hidden node matrix so we can get a matrix of current differentials
-			    SimpleMatrix hiddenDeltaMatrix = hiddenNode.copy();
-			    firstDifferential(hiddenDeltaMatrix);
-			    hiddenDeltaMatrix = deltaVal(hiddenDeltaMatrix, weightMatrix2, outputDeltaMatrix);		    		    		    		    			    			    		    
-			    
-			    //New weight: Old Weight + (Step Size * currentDelta * input)			    
-
-			    
-			    weightMatrix1 = updateWeight(weightMatrix1, stepSize, hiddenDeltaMatrix, inputMatrix);
-			    biasMatrix1 = updateBias(biasMatrix1, stepSize, hiddenDeltaMatrix);
-			    weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, hiddenNode);
-			    biasMatrix2 = updateBias(biasMatrix2, stepSize, outputDeltaMatrix);
+				    
+				    outputNode.print();
+				    
+			    }
 			    
 			    
 	}
