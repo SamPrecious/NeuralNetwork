@@ -138,18 +138,10 @@ public class MultiLayerPerceptron {
 	
 	//Performs the forward through layer in a network
 	private static SimpleMatrix forwardPass(SimpleMatrix currentLayer, SimpleMatrix input, SimpleMatrix weight, SimpleMatrix bias) {
-		
-		System.out.println();
-		input.print();
-		weight.print();
-		
+				
 		currentLayer = input.mult(weight).plus(bias);
-		
-		currentLayer.print();
-		
+				
 		sigmoid(currentLayer);
-		
-		currentLayer.print();
 		
 		return currentLayer;
 	}
