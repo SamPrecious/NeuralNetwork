@@ -78,22 +78,26 @@ public class MultiLayerPerceptron {
 		SimpleMatrix biasMatrix2 = new SimpleMatrix(biasArray2);
 		
 		
-		neuralNetwork.addBiases(biasMatrix1);
-		neuralNetwork.addBiases(biasMatrix2);
+		//Creates matrices for the weights and biases (using the arrays)
+		neuralNetwork.addBiases(new SimpleMatrix(biasArray1));
+		neuralNetwork.addBiases(new SimpleMatrix(biasArray2));
 		
-		neuralNetwork.addWeights(weightMatrix1);
-		neuralNetwork.addWeights(weightMatrix2);
-		
-		
-		
-		neuralNetwork.addLayer(new SimpleMatrix(inputMatrix.numRows(), weightMatrix1.numCols()));
-		neuralNetwork.addLayer(new SimpleMatrix(neuralNetwork.getLayer(0).numRows(), weightMatrix2.numCols()));
+		neuralNetwork.addWeights(new SimpleMatrix(weightArray1));
+		neuralNetwork.addWeights(new SimpleMatrix(weightArray2));
 		
 		
 		
-		//SimpleMatrix hiddenNode = new SimpleMatrix(inputMatrix.numRows(), weightMatrix1.numCols());
-		//SimpleMatrix outputNode = new SimpleMatrix(hiddenNode.numRows(), weightMatrix2.numCols());
-
+		
+		
+		
+		SimpleMatrix hiddenNode = new SimpleMatrix(inputMatrix.numRows(), weightMatrix1.numCols());
+		SimpleMatrix outputNode = new SimpleMatrix(hiddenNode.numRows(), weightMatrix2.numCols());
+		
+		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
+		allLayers.add(inputMatrix);
+		allLayers.add(hiddenNode);
+		allLayers.add(outputNode);
+		
 		double outputDelta;
 
 		double stepSize = 0.1;
@@ -101,37 +105,41 @@ public class MultiLayerPerceptron {
 		double correctOutput = 1;
 
 		// Initially do a forward pass to start off with
+		outputNode.print();
 		
-		neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix, weightMatrix1, biasMatrix1));
-		neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
-
-		//x nodes. Each node has a weight & bias
+		hiddenNode = forwardPass(hiddenNode, inputMatrix, weightMatrix1, biasMatrix1);
+		outputNode = forwardPass(outputNode, hiddenNode, weightMatrix2, biasMatrix2);
 		
-		neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix));
-		neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                          		 
-		neuralNetwork.getLayer(1).print();
-
+        outputNode.print();
+		//Initially do a forward pass
+		//First node does NOT induce extra layer for weights and biases
+		
+        
+        allLayers.get(2).print();
+        allLayers = forwardPass(allLayers, neuralNetwork);
+        allLayers.get(2).print();
 		// This is our main loop, doing a forward pass, then a backward pass, for x
 		// number of epochs
 		
 		
+		//outputNode.print();
 		
 		
-		
+		//AT SOME POINT WE MODIFY BIAS, WHEN WE DO THIS, WE DO NOT MODIFY THE BIAS WITHIN THE OBJECT
+		/*
 		for (int i = 0; i < 20000; i++) {
 
 			// The rest is a backward pass, we need most values in this function, so there
 			// is no point creating another function for this.
 
-			outputDelta = (correctOutput - neuralNetwork.getLayer(1).get(0, 0)) * (neuralNetwork.getLayer(1).get(0, 0) * (1 - neuralNetwork.getLayer(1).get(0, 0)));
+			outputDelta = (correctOutput - outputNode.get(0, 0)) * (outputNode.get(0, 0) * (1 - outputNode.get(0, 0)));
 
 			double[][] outputDeltaArray = { { outputDelta } };
 			SimpleMatrix outputDeltaMatrix = new SimpleMatrix(outputDeltaArray);
 
 			// Here we clone our hidden node matrix so we can get a matrix of current
 			// differentials
-			SimpleMatrix hiddenDeltaMatrix = neuralNetwork.getLayer(0).copy();
+			SimpleMatrix hiddenDeltaMatrix = hiddenNode.copy();
 			firstDifferential(hiddenDeltaMatrix);
 			hiddenDeltaMatrix = deltaVal(hiddenDeltaMatrix, weightMatrix2, outputDeltaMatrix);
 
@@ -139,33 +147,104 @@ public class MultiLayerPerceptron {
 
 			weightMatrix1 = updateWeight(weightMatrix1, stepSize, hiddenDeltaMatrix, inputMatrix);
 			biasMatrix1 = updateBias(biasMatrix1, stepSize, hiddenDeltaMatrix);
-			weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, neuralNetwork.getLayer(0));
+			weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, hiddenNode);
 			biasMatrix2 = updateBias(biasMatrix2, stepSize, outputDeltaMatrix);
-
+			
+			
+			ArrayList<SimpleMatrix> dataMatrices = new ArrayList<SimpleMatrix>();
+			
+			dataMatrices.add(hiddenDeltaMatrix);
+			dataMatrices.add(outputDeltaMatrix);
+			
+			//weightMatrix1 = updateWeight(weightMatrix1, stepSize, hiddenDeltaMatrix, inputMatrix);
+			//neuralNetwork = updateWeights(neuralNetwork, stepSize, dataMatrices);
 			// Apply forward pass with updated values
 			
 			//hiddenNode = forwardPass(hiddenNode, inputMatrix, neuralNetwork);
-			neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix, weightMatrix1, biasMatrix1));
-			neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
+			hiddenNode = forwardPass(hiddenNode, inputMatrix, weightMatrix1, biasMatrix1);
+			outputNode = forwardPass(outputNode, hiddenNode, weightMatrix2, biasMatrix2);
 
-			neuralNetwork.getLayer(1).print();
+			outputNode.print();
+			//allLayers.get(1).print();
 			
-
-		}
+			//biasMatrix1.print();
+			//neuralNetwork.getBiases(0).print();
+			
+			
+			
+		}*/
 		
 		
 		
 
 	}
 	
-	private static SimpleMatrix forwardPass(SimpleMatrix currentLayer, SimpleMatrix input) {
+	
+	private static ArrayList<SimpleMatrix> forwardPass(ArrayList<SimpleMatrix> layers, NeuralNetwork neuralNetwork) {
+		
+		//Start from 1 because we dont perform operations on the input layer.
+		for(int i = 1; i<layers.size(); i++) {
+			layers.set(i, sigmoids(layers.get(i-1).mult(neuralNetwork.getWeights(i-1)).plus(neuralNetwork.getBiases(i-1)))); //Range of i-1 for Weights and Biases
+			//layers.set(i, sigmoids(layers.get(i-1));
+		}
+		
+		return layers;
+	}
+	
+	private static SimpleMatrix sigmoids(SimpleMatrix m) {
+		DMatrixIterator it = m.iterator(false, 0, 0, m.numRows() - 1, m.numCols() - 1);
 
-		//currentLayer = input.mult(neuralNetwork.getWeights(0)).plus(neuralNetwork.getBiases(0));
+		// Iterates through the matrix and applies sigmoid
+		while (it.hasNext()) {
+			it.set(1 / (1 + Math.exp(-it.next())));
+		}
+		
+		return m;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	// Performs the forward through layer in a network
+	private static SimpleMatrix forwardPass(SimpleMatrix currentLayer, SimpleMatrix input, SimpleMatrix weight, SimpleMatrix bias) {
 
-		sigmoid(input.mult(neuralNetwork.getWeights(0)).plus(neuralNetwork.getBiases(0)));
-
+		currentLayer = input.mult(weight).plus(bias);
+		
+		
+		sigmoid(currentLayer);
 		return currentLayer;
 	}
+	
+	
+	
+		
+		
+	
+	public static NeuralNetwork updateWeights(NeuralNetwork neuralNetwork, double stepSize, ArrayList<SimpleMatrix> deltaVals) {
+		/*
+		 * We want to get oldVal = oldVal + (stepSize*delta*input) This matrix
+		 * calculation works out these values
+		 */
+		
+		for(int i = 0; i<2; i++) {
+			System.out.println("test");
+			//neuralNetwork.setWeight(neuralNetwork.getWeights(i).plus(deltaVals.get(i).transpose().mult(null)     )       );
+		}
+		
+		return neuralNetwork;
+
+		//return weight.plus(delta.transpose().mult(input).scale(stepSize).transpose());
+
+	}
+	
+	
+	// Performs the forward through layer in a network
+		
+	
 	
 
 	public static SimpleMatrix updateBias(SimpleMatrix bias, double stepSize, SimpleMatrix delta) {
@@ -205,15 +284,7 @@ public class MultiLayerPerceptron {
 		return currentLayer;
 	}
 
-	// Performs the forward through layer in a network
-	private static SimpleMatrix forwardPass(SimpleMatrix currentLayer, SimpleMatrix input, SimpleMatrix weight, SimpleMatrix bias) {
-
-		currentLayer = input.mult(weight).plus(bias);
-
-		sigmoid(currentLayer);
-
-		return currentLayer;
-	}
+	
 
 	private static void sigmoid(SimpleMatrix m) {
 
