@@ -6,9 +6,9 @@ import org.ejml.simple.SimpleMatrix;
 
 public class NeuralNetwork {
 
-
+	//multiple layers. Each layer has x weights relating to nodes
 	
-	private ArrayList<SimpleMatrix> nodes = new ArrayList<SimpleMatrix>();
+	private ArrayList<SimpleMatrix> layers = new ArrayList<SimpleMatrix>();
 
 	
 	private ArrayList<SimpleMatrix> allBiases = new ArrayList<SimpleMatrix>();
@@ -18,16 +18,16 @@ public class NeuralNetwork {
 	
 	
 	
-	public void addNode(SimpleMatrix node) {
-		nodes.add(node);
+	public void addLayer(SimpleMatrix layer) {
+		layers.add(layer);
 	}
 	
-	public SimpleMatrix getNode(int index) {
-		return nodes.get(index);
+	public SimpleMatrix getLayer(int index) {
+		return layers.get(index);
 	}
 	
-	public void setNode(int index, SimpleMatrix node) {
-		nodes.set(index, node);
+	public void setLayer(int index, SimpleMatrix layer) {
+		layers.set(index, layer);
 	}
 	
 	

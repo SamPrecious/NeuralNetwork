@@ -86,8 +86,8 @@ public class MultiLayerPerceptron {
 		
 		
 		
-		neuralNetwork.addNode(new SimpleMatrix(inputMatrix.numRows(), weightMatrix1.numCols()));
-		neuralNetwork.addNode(new SimpleMatrix(neuralNetwork.getNode(0).numRows(), weightMatrix2.numCols()));
+		neuralNetwork.addLayer(new SimpleMatrix(inputMatrix.numRows(), weightMatrix1.numCols()));
+		neuralNetwork.addLayer(new SimpleMatrix(neuralNetwork.getLayer(0).numRows(), weightMatrix2.numCols()));
 		
 		
 		
@@ -102,15 +102,15 @@ public class MultiLayerPerceptron {
 
 		// Initially do a forward pass to start off with
 		
-		neuralNetwork.setNode(0, forwardPass(neuralNetwork.getNode(0), inputMatrix, weightMatrix1, biasMatrix1));
-		neuralNetwork.setNode(1, forwardPass(neuralNetwork.getNode(1), neuralNetwork.getNode(0), weightMatrix2, biasMatrix2));
+		neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix, weightMatrix1, biasMatrix1));
+		neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
 
+		//x nodes. Each node has a weight & bias
 		
-		
-		neuralNetwork.setNode(0, forwardPass(neuralNetwork.getNode(0), inputMatrix));
-		neuralNetwork.setNode(1, forwardPass(neuralNetwork.getNode(1), neuralNetwork.getNode(0), weightMatrix2, biasMatrix2));
+		neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix));
+		neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
                                                                                                                                                                                                                                                                                                                                                                                                                                                                           		 
-		neuralNetwork.getNode(1).print();
+		neuralNetwork.getLayer(1).print();
 
 		// This is our main loop, doing a forward pass, then a backward pass, for x
 		// number of epochs
@@ -124,14 +124,14 @@ public class MultiLayerPerceptron {
 			// The rest is a backward pass, we need most values in this function, so there
 			// is no point creating another function for this.
 
-			outputDelta = (correctOutput - neuralNetwork.getNode(1).get(0, 0)) * (neuralNetwork.getNode(1).get(0, 0) * (1 - neuralNetwork.getNode(1).get(0, 0)));
+			outputDelta = (correctOutput - neuralNetwork.getLayer(1).get(0, 0)) * (neuralNetwork.getLayer(1).get(0, 0) * (1 - neuralNetwork.getLayer(1).get(0, 0)));
 
 			double[][] outputDeltaArray = { { outputDelta } };
 			SimpleMatrix outputDeltaMatrix = new SimpleMatrix(outputDeltaArray);
 
 			// Here we clone our hidden node matrix so we can get a matrix of current
 			// differentials
-			SimpleMatrix hiddenDeltaMatrix = neuralNetwork.getNode(0).copy();
+			SimpleMatrix hiddenDeltaMatrix = neuralNetwork.getLayer(0).copy();
 			firstDifferential(hiddenDeltaMatrix);
 			hiddenDeltaMatrix = deltaVal(hiddenDeltaMatrix, weightMatrix2, outputDeltaMatrix);
 
@@ -139,16 +139,17 @@ public class MultiLayerPerceptron {
 
 			weightMatrix1 = updateWeight(weightMatrix1, stepSize, hiddenDeltaMatrix, inputMatrix);
 			biasMatrix1 = updateBias(biasMatrix1, stepSize, hiddenDeltaMatrix);
-			weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, neuralNetwork.getNode(0));
+			weightMatrix2 = updateWeight(weightMatrix2, stepSize, outputDeltaMatrix, neuralNetwork.getLayer(0));
 			biasMatrix2 = updateBias(biasMatrix2, stepSize, outputDeltaMatrix);
 
 			// Apply forward pass with updated values
 			
 			//hiddenNode = forwardPass(hiddenNode, inputMatrix, neuralNetwork);
-			neuralNetwork.setNode(0, forwardPass(neuralNetwork.getNode(0), inputMatrix, weightMatrix1, biasMatrix1));
-			neuralNetwork.setNode(1, forwardPass(neuralNetwork.getNode(1), neuralNetwork.getNode(0), weightMatrix2, biasMatrix2));
+			neuralNetwork.setLayer(0, forwardPass(neuralNetwork.getLayer(0), inputMatrix, weightMatrix1, biasMatrix1));
+			neuralNetwork.setLayer(1, forwardPass(neuralNetwork.getLayer(1), neuralNetwork.getLayer(0), weightMatrix2, biasMatrix2));
 
-			neuralNetwork.getNode(1).print();
+			neuralNetwork.getLayer(1).print();
+			
 
 		}
 		
