@@ -22,6 +22,10 @@ public class NeuralNetwork {
 		return allBiases.get(index);
 	}
 	
+	public void setBiases(int index, SimpleMatrix bias) {
+		allBiases.set(index, bias);
+	}
+	
 	public int getBiasLength() {
 		return allBiases.size();
 	}
