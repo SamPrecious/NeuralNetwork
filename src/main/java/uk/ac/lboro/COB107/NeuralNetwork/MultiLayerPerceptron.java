@@ -64,7 +64,7 @@ public class MultiLayerPerceptron {
 
 		// This represents the layers in a network EXCLUDING the input layer (as the
 		// input layer isnt treated the same as other layers with weights
-		int networkSize = 3;
+		int networkSize = 2;
 
 		double stepSize = 0.1;
 
@@ -87,7 +87,7 @@ public class MultiLayerPerceptron {
 		double[] validationPredictandMax = allInputs.getValidationPredictandMax();
 		double[] validationPredictandMin = allInputs.getValidationPredictandMin();
 
-		double[][] inputArray = { { 1, 0 } };
+		double[][] inputArray = { { 1, 0, 1 } };
 
 		// SimpleMatrix inputMatrix = new SimpleMatrix(inputArray);
 
@@ -115,9 +115,8 @@ public class MultiLayerPerceptron {
 		
 
 		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
-
 		allLayers.add(inputMatrix);
-		layerSizes.add(2); // Input Node  - trainingData.get(0).numCols()
+		layerSizes.add(inputArray[0].length); // Input Node  - trainingData.get(0).numCols()
 
 		//Generate all layers with appropriate sizes (columns of last row)
 		for(int i = 0; i<networkSize; i++) {
@@ -145,6 +144,8 @@ public class MultiLayerPerceptron {
 			int column = layerSizes.get(i);
 			
 			double[][] currentWeightArray = new double[row][column];
+			System.out.println("Rows: "+row+" Columns: "+ column);
+			
 			
 			for(int x = 0; x<currentWeightArray.length; x++) {
 				for(int y = 0; y<currentWeightArray[x].length; y++) {
