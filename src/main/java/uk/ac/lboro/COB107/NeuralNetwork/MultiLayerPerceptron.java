@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import org.ejml.data.DMatrixIterator;
 import org.ejml.simple.SimpleMatrix;
-
+import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MultiLayerPerceptron {
 
@@ -30,50 +31,34 @@ public class MultiLayerPerceptron {
 		predict(allInputs);
 	}
 
-	
 	/*
-	 * NOTE: Columns are the variables inside the curly brackets, rows are curly brackets
-	 * Guide to adding a new layer:
-	 * 		For each layer, the previous weight node must have one more column
-	 * 		New Layer:
-	 * 			Weight going in must have the amount of columns for each node current layer
-	 * 			Weight going in must have the amount of rows for each node on previous layer
-	 * 	Say for example we want to increase the size of the input node.
-	 * 	We have now +1ed the amount of inputs being used, this means the output weight array will have the same amount of columns, but +1 row
-	 * 		
+	 * NOTE: Columns are the variables inside the curly brackets, rows are curly
+	 * brackets Guide to adding a new layer: For each layer, the previous weight
+	 * node must have one more column New Layer: Weight going in must have the
+	 * amount of columns for each node current layer Weight going in must have the
+	 * amount of rows for each node on previous layer Say for example we want to
+	 * increase the size of the input node. We have now +1ed the amount of inputs
+	 * being used, this means the output weight array will have the same amount of
+	 * columns, but +1 row
+	 * 
 	 * 
 	 */
 	public static void predict(inputData allInputs) {
+		
 
 		
 		ArrayList<Integer> layerSizes = new ArrayList<Integer>();
-		
-		layerSizes.add(2); //Input Node
-		layerSizes.add(3); //Hidden Nodes
-		layerSizes.add(2); //Hidden Nodes
-		layerSizes.add(1); //Output
+
 		
 
 		double rangeMin = 10;
 		double rangeMax = 20;
-		
+
 		Random r = new Random();
 		double randomValue = rangeMin + (rangeMax - rangeMin) * r.nextDouble();
-		
-		//System.out.println(randomValue);
-		
-		//Inbetween layer xi and xi+1, the weights must have xi (node amount) rows, and xi+1 (node amount) columns, so this calculates that,
-		int rows = layerSizes.get(0);
-		for(int i = 1; i<layerSizes.size(); i++) {
-			int column = layerSizes.get(i);
-			System.out.println("Rows: "+ rows);
-			System.out.println("Columns: "+ column + "");
-			rows = column;
-		}
-		
-		
-		
-		
+
+		// System.out.println(randomValue);
+
 		// ArrayList<SimpleMatrix> testing = allInputs.getTraining();
 		// testing.get(0).print();
 
@@ -92,34 +77,33 @@ public class MultiLayerPerceptron {
 		ArrayList<SimpleMatrix> testingData = allInputs.getTesting();
 		ArrayList<SimpleMatrix> testingExpected = allInputs.getTestingExpected();
 
-		
 		double[] trainingTotalMax = allInputs.getTrainingTotalMax();
 		double[] trainingTotalMin = allInputs.getTrainingTotalMin();
 		double[] trainingPredictandMax = allInputs.getTrainingPredictandMax();
 		double[] trainingPredictandMin = allInputs.getTrainingPredictandMin();
-		
-		
+
 		double[] validationTotalMax = allInputs.getValidationTotalMax();
 		double[] validationTotalMin = allInputs.getValidationTotalMin();
 		double[] validationPredictandMax = allInputs.getValidationPredictandMax();
 		double[] validationPredictandMin = allInputs.getValidationPredictandMin();
-		
-		
-		double[][] inputArray = { { 1, 0 }};
-		
-		
-		
-		
+
+		double[][] inputArray = { { 1, 0 } };
+
 		// SimpleMatrix inputMatrix = new SimpleMatrix(inputArray);
 
 		SimpleMatrix inputMatrix = new SimpleMatrix(inputArray); // An array containing all inputs as matrices
-		
-		//Inputs DONT change, we can change them from an array to an arraylist, then just compare extractions of the row instead of the whole list. CHANGE THIS... OR CHANGE THE STANDARDISATION METHOD TO LOOP THROUGH ARRAYLIST INSTEAD OF MATRICES
-		
-		
-		trainingData.get(0).print();
-		//trainingData = standardise(trainingData, trainingTotalMax, trainingTotalMin);
-		
+
+		// Inputs DONT change, we can change them from an array to an arraylist, then
+		// just compare extractions of the row instead of the whole list. CHANGE THIS...
+		// OR CHANGE THE STANDARDISATION METHOD TO LOOP THROUGH ARRAYLIST INSTEAD OF
+		// MATRICES
+
+		trainingData = standardise(trainingData, trainingTotalMax, trainingTotalMin);
+		trainingExpected = standardise(trainingExpected, trainingPredictandMax, trainingPredictandMin);
+
+		validationData = standardise(validationData, validationTotalMax, validationTotalMin);
+		validationExpected = standardise(validationExpected, validationPredictandMax, validationPredictandMin);
+
 		/*
 		 * inputData currentInputs = new inputData();
 		 * 
@@ -128,29 +112,68 @@ public class MultiLayerPerceptron {
 		 * for(SimpleMatrix test: testing) { test.print(); }
 		 */
 
-		// Define all Matrices
-		double[][] weightArray1 = { { 3, 6 }, { 4, 5 } };
-		double[][] biasArray1 = { { 1, -6 } };
-		//double[][] weightArray2 = { { 3, 6, 2 }, { 4, 5, 2 } }; 
-		//double[][] biasArray2 = { { 1, -6, 4} };
-		double[][] weightArray2 = { { 2 }, { 4 } };
-		double[][] biasArray2 = { { -3.92 } };
-
-		
-		//To add layer, new layer must have amount of inputs as previous layer (i.e. prev layer = 2 inputs, current layer could have a weight array of e.g. {3,4,2}{3,2,1} <- Assumes our new hidden layer has 3 nodes. Our next layer (so w2 in this case) must get 1 more weight added (so another {})
-		//to increase size of node: increasing node size means you must: increase the amount of weights going in, i.e. w3 +1 per node per previous array. Increase biases by +1 per node
 		
 
-		// Creates matrices for the weights and biases (using the arrays)
-		neuralNetwork.addBiases(new SimpleMatrix(biasArray1));
-		neuralNetwork.addBiases(new SimpleMatrix(biasArray2));
-		//neuralNetwork.addBiases(new SimpleMatrix(biasArray3));
+		
+		
+		
+		
+		layerSizes.add(2); // Input Node
+		layerSizes.add(2); // Hidden Nodes
+		//layerSizes.add(2); // Hidden Nodes
+		layerSizes.add(1); // Output
+		
+		ArrayList<SimpleMatrix> weightMatrices = new ArrayList<SimpleMatrix>();
+		
+		
+		long trainingStartTime = System.nanoTime();
 
-		neuralNetwork.addWeights(new SimpleMatrix(weightArray1));
-		neuralNetwork.addWeights(new SimpleMatrix(weightArray2));
-		//neuralNetwork.addWeights(new SimpleMatrix(weightArray3));
+		// Inbetween layer xi and xi+1, the weights must have xi (node amount) rows, and
+		// xi+1 (node amount) columns, so this calculates that. We calculate biases for xi+1 as well, we use the range -2/n -> 2/n, where n is input size
+		int row = layerSizes.get(0);
+		double inputs = trainingData.get(0).numCols();
+		for (int i = 1; i < layerSizes.size(); i++) {
+			int column = layerSizes.get(i);
+			
+			double[][] currentWeightArray = new double[row][column];
+			
+			for(int x = 0; x<currentWeightArray.length; x++) {
+				for(int y = 0; y<currentWeightArray[x].length; y++) {
+					double randomNum = ThreadLocalRandom.current().nextDouble(-(2/inputs), 2/inputs); //Generates random number within range
+					currentWeightArray[x][y] = randomNum;
+				}
+			}
+			
+			double[][] currentBiasArray = new double[1][column];
 
+			for(int x = 0; x<currentBiasArray[0].length; x++) {
+				double randomNum = ThreadLocalRandom.current().nextDouble(-(2/inputs), 2/inputs); //Generates random number within range
+				currentBiasArray[0][x] = randomNum;
+			}
+			
+			
+			SimpleMatrix currentWeightMatrix = new SimpleMatrix(currentWeightArray);
+			SimpleMatrix currentBiasMatrix = new SimpleMatrix(currentBiasArray);
+			
+			neuralNetwork.addWeights(currentWeightMatrix);
+			neuralNetwork.addBiases(currentBiasMatrix);
+			
+			//System.out.println("Biases "+ column );
+			//System.out.println("Rows: " + row); 
+			//System.out.println("Columns: " + column);
+			 
+			row = column;
+		}
 
+		// To add layer, new layer must have amount of inputs as previous layer (i.e.
+		// prev layer = 2 inputs, current layer could have a weight array of e.g.
+		// {3,4,2}{3,2,1} <- Assumes our new hidden layer has 3 nodes. Our next layer
+		// (so w2 in this case) must get 1 more weight added (so another {})
+		// to increase size of node: increasing node size means you must: increase the
+		// amount of weights going in, i.e. w3 +1 per node per previous array. Increase
+		// biases by +1 per node
+				
+		
 		SimpleMatrix hiddenNode = new SimpleMatrix(inputMatrix.numRows(), networkSize);
 
 		SimpleMatrix hiddenNode2 = new SimpleMatrix(hiddenNode.numRows(), networkSize);
@@ -160,42 +183,30 @@ public class MultiLayerPerceptron {
 		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
 		allLayers.add(inputMatrix);
 		allLayers.add(hiddenNode);
-		//allLayers.add(hiddenNode2);
+		// allLayers.add(hiddenNode2);
 		allLayers.add(outputNode);
-		
-		
-		
-		
-				
-		
+
 		double correctOutput = 0.9;
 
 		HashMap<Integer, SimpleMatrix> deltaMatrices = new HashMap<Integer, SimpleMatrix>(); // Contains all delta
 																								// values
 
-
-		/*
-		 * neuralNetwork.getWeights(0).print(); neuralNetwork.getWeights(1).print();
-		 * neuralNetwork.getWeights(2).print();
-		 */
-
-
 		// This forloop handles the backwards and forwards propagation. The number i is
 		// compared to represents the amount of epochs we use
-		
-		
-		//Every time allLayers.get(0) is referenced, replace with currentInput
-		
-		for (int i = 0; i < 2000; i++) {
+
+		// Every time allLayers.get(0) is referenced, replace with currentInput
+		System.out.println("TrainingSize " + allInputs.getTrainingSize());
+		for (int i = 0; i < (2000); i++) {
 			
-			for(int x = 0; x<inputMatrix.numCols(); x++) {
-				SimpleMatrix currentInput = inputMatrix.extractVector(false, x);
+			
+			for(int x = 0; x<allInputs.getTrainingSize(); x++) {
+				if(x == allInputs.getTrainingSize()-1) {
+				}
 			}
 			
 			allLayers = forwardPass(allLayers, neuralNetwork);
-			//allLayers.get(networkSize).print();
+			// allLayers.get(networkSize).print();
 
-			
 			// In this for loop we calculate the deltas for each layer - We use start from 1
 			// as we dont calculate deltas for the input layer
 			for (int j = networkSize; j >= 1; j--) {
@@ -233,13 +244,17 @@ public class MultiLayerPerceptron {
 
 			// Gives us the output of the network for our current run
 
+			
+
 		}
 		allLayers = forwardPass(allLayers, neuralNetwork);
-		
+
 		SimpleMatrix output = allLayers.get(networkSize);
 		output = destandardise(output, 1, 0);
 		output.print();
-
+		
+		long trainingEndTime = System.nanoTime();
+		System.out.println("Took "+(trainingEndTime - trainingStartTime)/1000000 + " ms"); 
 
 	}
 
@@ -248,47 +263,60 @@ public class MultiLayerPerceptron {
 		// Start from 1 because we don't perform operations on the input layer.
 		for (int i = 1; i < layers.size(); i++) {
 			layers.set(i, sigmoids(
-					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); // Range of i-1 for Weights and Biases
+					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); // Range
+																													// of
+																													// i-1
+																													// for
+																													// Weights
+																													// and
+																													// Biases
 		}
 
 		return layers;
 	}
-	
-	//Standardises all data to the range [0.1, 0.9]
-	public static SimpleMatrix standardise(SimpleMatrix input, double[] max, double[] min) {
-		
-		/*
-		double[] newMax = {12,32,36,34,9};
-		double[] newMin = {1,1,1,8,4};
-		
-		double[][] newInputs = {{12,32,1,34,5},{1,3,12,13,4},{7,1,36,8,9}};
-		SimpleMatrix inMatrix = new SimpleMatrix(newInputs);*/
-		
-		for(int i = 0; i<input.numCols(); i++) {
-			DMatrixIterator it = input.iterator(false, 0, i, input.numRows() - 1, i);  //Iterate through current column
-			while (it.hasNext()) {
-				it.set((0.8 * (it.next()-min[i])/(max[i]-min[i])) + 0.1);
-				
+
+	// Standardises all data to the range [0.1, 0.9]
+	public static ArrayList<SimpleMatrix> standardise(ArrayList<SimpleMatrix> input, double[] max, double[] min) {
+		for (int i = 0; i < input.size(); i++) { // Loops through all rows in ArrayList
+			for (int j = 0; j < input.get(i).numCols(); j++) { // Loops through all columns in 1D matrix
+				SimpleMatrix currentRow = input.get(i);
+				DMatrixIterator it = currentRow.iterator(false, 0, j, currentRow.numRows() - 1, j); // Iterate through
+																									// current column
+				while (it.hasNext()) {
+					it.set((0.8 * (it.next() - min[j]) / (max[j] - min[j])) + 0.1);
+				}
+				input.set(i, currentRow);
 			}
 		}
-		
-	
 		return input;
 	}
-	
-	//Un-standardises the matrix for the correct outputs
-	public static SimpleMatrix destandardise(SimpleMatrix input, int max, int min) {				
+
+	public static ArrayList<SimpleMatrix> deStandardise(ArrayList<SimpleMatrix> input, double[] max, double[] min) {
+
+		for (int i = 0; i < input.size(); i++) { // Loops through all rows in ArrayList
+			for (int j = 0; j < input.get(i).numCols(); j++) { // Loops through all columns in 1D matrix
+				SimpleMatrix currentRow = input.get(i);
+				DMatrixIterator it = currentRow.iterator(false, 0, j, currentRow.numRows() - 1, j); // Iterate through
+																									// current column
+				while (it.hasNext()) {
+					it.set(((it.next() - 0.1) / 0.8) * (max[j] - min[j]) + min[j]);
+				}
+				input.set(i, currentRow);
+			}
+		}
+		return input;
+	}
+
+	// Un-standardises the matrix for the correct outputs
+	public static SimpleMatrix destandardise(SimpleMatrix input, int max, int min) {
 		DMatrixIterator it = input.iterator(false, 0, 0, input.numRows() - 1, input.numCols() - 1);
 
 		while (it.hasNext()) {
-			it.set(((it.next() - 0.1)/0.8)*(max - min) + min) ;
+			it.set(((it.next() - 0.1) / 0.8) * (max - min) + min);
 		}
 		return input;
 	}
-	
-	
-	
-	
+
 	public static NeuralNetwork updateValues(int networkSize, NeuralNetwork neuralNetwork,
 			ArrayList<SimpleMatrix> allLayers, double stepSize, HashMap<Integer, SimpleMatrix> deltaMatrices) {
 
@@ -337,7 +365,8 @@ public class MultiLayerPerceptron {
 	// This next line multiplies the first differential with the (Weight * delta on
 	// previous layer)
 
-	public static SimpleMatrix deltaVal(SimpleMatrix currentDifferentialMatrix, SimpleMatrix weights, SimpleMatrix lastDifferentialMatrix) {
+	public static SimpleMatrix deltaVal(SimpleMatrix currentDifferentialMatrix, SimpleMatrix weights,
+			SimpleMatrix lastDifferentialMatrix) {
 
 		SimpleMatrix averageDeltaWeight = new SimpleMatrix(weights.numRows(), lastDifferentialMatrix.numCols());
 
@@ -380,50 +409,50 @@ public class MultiLayerPerceptron {
 			FileInputStream excelFile = new FileInputStream(new File("datasetReadable.xlsx"));
 			Workbook workbook = new XSSFWorkbook(excelFile);
 			Sheet datatypeSheet = workbook.getSheetAt(0);
-			Iterator<Row> iterator = datatypeSheet.iterator();
 
-			int width = 0;
-			Row checkWidth = iterator.next(); // Uses the header row to check the width of the excel document
-			Iterator<Cell> cellIteratorWidth = checkWidth.iterator();
+			int width = datatypeSheet.getRow(0).getLastCellNum();
+			int depth = datatypeSheet.getLastRowNum() + 1; // Starts at 0 so we add 1
+			// System.out.println("Columns" + noOfColumns);
 
-			while (cellIteratorWidth.hasNext()) {
-				cellIteratorWidth.next();
-				width++;
-			}
+			int datasetDeterminant = 1;
 
-			int datasetDeterminant = 1; // This integer determines what dataset the data will fall into (split 60/20/20 so 3:1:1)
-
-			
-			double[] totalRowMaxValidation = new double[width-1];
-			double[] totalRowMinValidation = new double[width-1];
+			double[] totalRowMaxValidation = new double[width - 1];
+			double[] totalRowMinValidation = new double[width - 1];
 			double[] predictandMaxValidation = new double[1];
 			double[] predictandMinValidation = new double[1];
-			predictandMinValidation[0] = Double.MAX_VALUE;						
-			
-			double[] totalRowMaxTraining = new double[width-1];
-			double[] totalRowMinTraining = new double[width-1];
+			predictandMinValidation[0] = Double.MAX_VALUE;
+
+			double[] totalRowMaxTraining = new double[width - 1];
+			double[] totalRowMinTraining = new double[width - 1];
 			double[] predictandMaxTraining = new double[1];
 			double[] predictandMinTraining = new double[1];
 			predictandMinTraining[0] = Double.MAX_VALUE;
-			
-			for(int i = 0; i<totalRowMinValidation.length; i++)  { //Makes all variables in the predictand min column the max value, so we dont accidentally put a value lower than minimum in here
+
+			for (int i = 0; i < totalRowMinValidation.length; i++) { // Makes all variables in the predictand min column
+																		// the max value, so we dont accidentally put a
+																		// value lower than minimum in here
 				totalRowMinValidation[i] = Double.MAX_VALUE;
 			}
-			for(int i = 0; i<totalRowMinTraining.length; i++) { //Makes all variables in the predictand min column the max value, so we dont accidentally put a value lower than minimum in here
+			for (int i = 0; i < totalRowMinTraining.length; i++) { // Makes all variables in the predictand min column
+																	// the max value, so we dont accidentally put a
+																	// value lower than minimum in here
 				totalRowMinTraining[i] = Double.MAX_VALUE;
 			}
-			
-			while (iterator.hasNext()) {
+
+			Iterator<Row> widthIterator = datatypeSheet.iterator();
+
+			int trainingSize = 0;
+			while (widthIterator.hasNext()) {
 				// System.out.println(currentRowIndex);
 
-				Row currentRow = iterator.next();
+				Row currentRow = widthIterator.next();
 				Iterator<Cell> cellIterator = currentRow.iterator();
 
+				// CHANGE THIS FROM ARRAYLIST (so instead of new double[1][width-1] we set
+				// double[i][width-1]
 				double[][] currentRowArray = new double[1][width - 1];
 				double[][] currentRowPredictedArray = new double[1][1]; // 1x1 array for the output
-				
-				
-				
+
 				int i = 0;
 
 				while (cellIterator.hasNext()) {
@@ -433,37 +462,60 @@ public class MultiLayerPerceptron {
 					if (i == width - 1) {
 						double currentVal = currentCell.getNumericCellValue();
 						currentRowPredictedArray[0][0] = currentVal;
-						
-						
+
 						if (datasetDeterminant <= 3) { // First 3 variables go training
-							predictandMaxTraining[0] = Math.max(predictandMaxTraining[0], currentVal);  //Compares last value to current to check for max
-							predictandMinTraining[0] = Math.min(predictandMinTraining[0], currentVal);  //Compares last value to current to check for max
-						}else if (datasetDeterminant <= 4) { // First 3 variables go training
-							predictandMaxValidation[0] = Math.max(predictandMaxValidation[0], currentVal);  //Compares last value to current to check for max
-							predictandMinValidation[0] = Math.min(predictandMinValidation[0], currentVal);  //Compares last value to current to check for max
+							predictandMaxTraining[0] = Math.max(predictandMaxTraining[0], currentVal); // Compares last value to current to check for max
+							trainingSize++;
+							predictandMinTraining[0] = Math.min(predictandMinTraining[0], currentVal); // Compares last
+																										// value to
+																										// current to
+																										// check for max
+						} else if (datasetDeterminant <= 4) { // First 3 variables go training
+							predictandMaxValidation[0] = Math.max(predictandMaxValidation[0], currentVal); // Compares
+																											// last
+																											// value to
+																											// current
+																											// to check
+																											// for max
+							predictandMinValidation[0] = Math.min(predictandMinValidation[0], currentVal); // Compares
+																											// last
+																											// value to
+																											// current
+																											// to check
+																											// for max
 						}
-						
+
 					} else {
 						double currentVal = currentCell.getNumericCellValue();
 						currentRowArray[0][i] = currentVal;
-						
-						
+
 						if (datasetDeterminant <= 3) { // First 3 variables go training
-							totalRowMaxTraining[i] = Math.max(totalRowMaxTraining[i], currentVal);  //Compares last value to current to check for max
-							totalRowMinTraining[i] = Math.min(totalRowMinTraining[i], currentVal);  //Compares last value to current to check for max
-						}else if (datasetDeterminant <= 4) { // First 3 variables go training
-							totalRowMaxValidation[i] = Math.max(totalRowMaxValidation[i], currentVal);  //Compares last value to current to check for max
-							totalRowMinValidation[i] = Math.min(totalRowMinValidation[i], currentVal);  //Compares last value to current to check for max
+							totalRowMaxTraining[i] = Math.max(totalRowMaxTraining[i], currentVal); // Compares last
+																									// value to current
+																									// to check for max
+							totalRowMinTraining[i] = Math.min(totalRowMinTraining[i], currentVal); // Compares last
+																									// value to current
+																									// to check for max
+						} else if (datasetDeterminant <= 4) { // First 3 variables go training
+							totalRowMaxValidation[i] = Math.max(totalRowMaxValidation[i], currentVal); // Compares last
+																										// value to
+																										// current to
+																										// check for max
+							totalRowMinValidation[i] = Math.min(totalRowMinValidation[i], currentVal); // Compares last
+																										// value to
+																										// current to
+																										// check for max
 						}
-						
+
 					}
-					
+
 					i++;
 
 				}
-				
-				
-				allInputs.addMaxMins(totalRowMaxTraining, totalRowMinTraining, predictandMaxTraining, predictandMinTraining, totalRowMaxValidation, totalRowMinValidation, predictandMaxValidation, predictandMinValidation);
+
+				allInputs.addMaxMins(totalRowMaxTraining, totalRowMinTraining, predictandMaxTraining,
+						predictandMinTraining, totalRowMaxValidation, totalRowMinValidation, predictandMaxValidation,
+						predictandMinValidation);
 
 				SimpleMatrix currentRowMatrix = new SimpleMatrix(currentRowArray);
 				SimpleMatrix currentRowPredictedMatrix = new SimpleMatrix(currentRowPredictedArray);
@@ -480,7 +532,7 @@ public class MultiLayerPerceptron {
 				}
 
 			}
-			
+			allInputs.addTrainingSize(trainingSize);
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

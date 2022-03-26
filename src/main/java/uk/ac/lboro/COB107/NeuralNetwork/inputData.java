@@ -16,11 +16,7 @@ public class inputData {
 		private ArrayList<SimpleMatrix> testing = new ArrayList<SimpleMatrix>();
 		private ArrayList<SimpleMatrix> testingExpected = new ArrayList<SimpleMatrix>();
 		
-		
-		
-		
-		
-		
+		private int trainingSize;
 		
 		private double[] trainingTotalMax;
 		private double[] trainingTotalMin;
@@ -32,17 +28,16 @@ public class inputData {
 		private double[] validationTotalMin;
 		private double[] validationPredictandMax;
 		private double[] validationPredictandMin;
-				
-		/*
-		private void createInputData() {
-			training = new ArrayList<SimpleMatrix>();
-			validation = new ArrayList<SimpleMatrix>();
-			testing = new ArrayList<SimpleMatrix>();
-
-		}*/
+						
 		
 		
 		
+		public void addTrainingSize(int trainingSize) {
+			this.trainingSize = trainingSize;
+		}
+		public int getTrainingSize() {
+			return trainingSize;
+		}
 		
 		public void addTraining(SimpleMatrix newTrainingData, SimpleMatrix expected) {
 			training.add(newTrainingData);
