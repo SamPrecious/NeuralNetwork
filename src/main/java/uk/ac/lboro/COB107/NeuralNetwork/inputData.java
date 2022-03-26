@@ -15,8 +15,24 @@ public class inputData {
 		
 		private ArrayList<SimpleMatrix> testing = new ArrayList<SimpleMatrix>();
 		private ArrayList<SimpleMatrix> testingExpected = new ArrayList<SimpleMatrix>();
-
 		
+		
+		
+		
+		
+		
+		
+		private double[] trainingTotalMax;
+		private double[] trainingTotalMin;
+		private double[] trainingPredictandMax;
+		private double[] trainingPredictandMin;
+		
+		
+		private double[] validationTotalMax;
+		private double[] validationTotalMin;
+		private double[] validationPredictandMax;
+		private double[] validationPredictandMin;
+				
 		/*
 		private void createInputData() {
 			training = new ArrayList<SimpleMatrix>();
@@ -24,6 +40,9 @@ public class inputData {
 			testing = new ArrayList<SimpleMatrix>();
 
 		}*/
+		
+		
+		
 		
 		public void addTraining(SimpleMatrix newTrainingData, SimpleMatrix expected) {
 			training.add(newTrainingData);
@@ -59,5 +78,49 @@ public class inputData {
 		public ArrayList<SimpleMatrix> getTestingExpected() {
 			return testingExpected;
 		}
+		
+		
+		public void addMaxMins(double[] trainingTotalMax, double[] trainingTotalMin, double[] trainingPredictandMax, double[] trainingPredictandMin, double[] validationTotalMax, double[] validationTotalMin, double[] validationPredictandMax, double[] validationPredictandMin) {
+			this.trainingTotalMax = trainingTotalMax;
+			this.trainingTotalMin = trainingTotalMin;
+			this.trainingPredictandMax = trainingPredictandMax;
+			this.trainingPredictandMin  = trainingPredictandMin;
+			
+			this.validationTotalMax = validationTotalMax;
+			this.validationTotalMin = validationTotalMin;
+			this.validationPredictandMax = validationPredictandMax;
+			this.validationPredictandMin = validationPredictandMin;
+		}
+		
+		public double[] getTrainingTotalMax() {
+			return trainingTotalMax;
+		}
+		public double[] getTrainingTotalMin() {
+			return trainingTotalMin;
+		}
+		public double[] getTrainingPredictandMax() {
+			return trainingPredictandMax;
+		}
+		public double[] getTrainingPredictandMin() {
+			return trainingPredictandMin;
+		}
+		public double[] getValidationTotalMax() {
+			return validationTotalMax;
+		}
+		public double[] getValidationTotalMin() {
+			return validationTotalMin;
+		}
+		public double[] getValidationPredictandMax() {
+			return validationPredictandMax;
+		}
+		public double[] getValidationPredictandMin() {
+			return validationPredictandMin;
+		}
+		
+		
+		
+		
+		
+		
 		
 }	
