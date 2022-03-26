@@ -64,7 +64,7 @@ public class MultiLayerPerceptron {
 
 		// This represents the layers in a network EXCLUDING the input layer (as the
 		// input layer isnt treated the same as other layers with weights
-		int networkSize = 2;
+		int networkSize = 3;
 
 		double stepSize = 0.1;
 
@@ -114,16 +114,25 @@ public class MultiLayerPerceptron {
 
 		
 
+		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
+
+		allLayers.add(inputMatrix);
+		layerSizes.add(2); // Input Node  - trainingData.get(0).numCols()
+
+		//Generate all layers with appropriate sizes (columns of last row)
+		for(int i = 0; i<networkSize; i++) {
+			SimpleMatrix currentLayer = new SimpleMatrix(allLayers.get(i).numRows(), 1);  //1 wide, and previous node of inputs long
+			allLayers.add(currentLayer);
+			if(i == networkSize-1) { //Currently we only have 1 output node, this may change, but until now we only want it to be 1 big
+				layerSizes.add(1);
+			}else{ //Change this to get user input, using base number 2 now as its way easier to test without inputting each time
+				layerSizes.add(2);
+			}
+		}
+		
+
 		
 		
-		
-		
-		layerSizes.add(2); // Input Node
-		layerSizes.add(2); // Hidden Nodes
-		//layerSizes.add(2); // Hidden Nodes
-		layerSizes.add(1); // Output
-		
-		ArrayList<SimpleMatrix> weightMatrices = new ArrayList<SimpleMatrix>();
 		
 		
 		long trainingStartTime = System.nanoTime();
@@ -174,18 +183,11 @@ public class MultiLayerPerceptron {
 		// biases by +1 per node
 				
 		
-		SimpleMatrix hiddenNode = new SimpleMatrix(inputMatrix.numRows(), networkSize);
+		
+		
 
-		SimpleMatrix hiddenNode2 = new SimpleMatrix(hiddenNode.numRows(), networkSize);
-
-		SimpleMatrix outputNode = new SimpleMatrix(hiddenNode2.numRows(), networkSize);
-
-		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
-		allLayers.add(inputMatrix);
-		allLayers.add(hiddenNode);
-		// allLayers.add(hiddenNode2);
-		allLayers.add(outputNode);
-
+		
+		
 		double correctOutput = 0.9;
 
 		HashMap<Integer, SimpleMatrix> deltaMatrices = new HashMap<Integer, SimpleMatrix>(); // Contains all delta
@@ -197,12 +199,15 @@ public class MultiLayerPerceptron {
 		// Every time allLayers.get(0) is referenced, replace with currentInput
 		System.out.println("TrainingSize " + allInputs.getTrainingSize());
 		for (int i = 0; i < (2000); i++) {
+			//SimpleMatrix currentRow = allInputs.getTrainingExpected().get(x);
+
 			
 			
-			for(int x = 0; x<allInputs.getTrainingSize(); x++) {
-				if(x == allInputs.getTrainingSize()-1) {
-				}
 			}
+		allLayers.get(0).print();	
+
+		
+		for(int i = 0; i<2000; i++) {
 			
 			allLayers = forwardPass(allLayers, neuralNetwork);
 			// allLayers.get(networkSize).print();
