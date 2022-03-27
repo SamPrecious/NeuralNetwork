@@ -44,18 +44,7 @@ public class MultiLayerPerceptron {
 	 * 
 	 */
 	public static void predict(inputData allInputs) {
-		
-
-		
 		ArrayList<Integer> layerSizes = new ArrayList<Integer>();
-
-		
-
-		double rangeMin = 10;
-		double rangeMax = 20;
-
-		Random r = new Random();
-		double randomValue = rangeMin + (rangeMax - rangeMin) * r.nextDouble();
 
 		// System.out.println(randomValue);
 
@@ -87,23 +76,24 @@ public class MultiLayerPerceptron {
 		double[] validationPredictandMax = allInputs.getValidationPredictandMax();
 		double[] validationPredictandMin = allInputs.getValidationPredictandMin();
 
-		double[][] inputArray = { { 1, 0, 1 } };
-
-		// SimpleMatrix inputMatrix = new SimpleMatrix(inputArray);
-
-		SimpleMatrix inputMatrix = new SimpleMatrix(inputArray); // An array containing all inputs as matrices
-
+		
+		SimpleMatrix inputMatrix = trainingData.get(0); // An array containing all inputs as matrices
 		// Inputs DONT change, we can change them from an array to an arraylist, then
 		// just compare extractions of the row instead of the whole list. CHANGE THIS...
 		// OR CHANGE THE STANDARDISATION METHOD TO LOOP THROUGH ARRAYLIST INSTEAD OF
 		// MATRICES
 
+		
 		trainingData = standardise(trainingData, trainingTotalMax, trainingTotalMin);
 		trainingExpected = standardise(trainingExpected, trainingPredictandMax, trainingPredictandMin);
-
+													
 		validationData = standardise(validationData, validationTotalMax, validationTotalMin);
 		validationExpected = standardise(validationExpected, validationPredictandMax, validationPredictandMin);
 
+		//trainingData.get(0).print();
+		//deStandardise(trainingData.get(0), trainingPredictandMax[0], trainingPredictandMin[0]).print();
+
+		
 		/*
 		 * inputData currentInputs = new inputData();
 		 * 
@@ -112,11 +102,10 @@ public class MultiLayerPerceptron {
 		 * for(SimpleMatrix test: testing) { test.print(); }
 		 */
 
-		
 
 		ArrayList<SimpleMatrix> allLayers = new ArrayList<SimpleMatrix>();
 		allLayers.add(inputMatrix);
-		layerSizes.add(inputArray[0].length); // Input Node  - trainingData.get(0).numCols()
+		layerSizes.add(inputMatrix.numCols()); // Input Node  - trainingData.get(0).numCols()
 
 		//Generate all layers with appropriate sizes (columns of last row)
 		for(int i = 0; i<networkSize; i++) {
@@ -125,7 +114,7 @@ public class MultiLayerPerceptron {
 			if(i == networkSize-1) { //Currently we only have 1 output node, this may change, but until now we only want it to be 1 big
 				layerSizes.add(1);
 			}else{ //Change this to get user input, using base number 2 now as its way easier to test without inputting each time
-				layerSizes.add(2);
+				layerSizes.add(4);
 			}
 		}
 		
@@ -144,7 +133,6 @@ public class MultiLayerPerceptron {
 			int column = layerSizes.get(i);
 			
 			double[][] currentWeightArray = new double[row][column];
-			System.out.println("Rows: "+row+" Columns: "+ column);
 			
 			
 			for(int x = 0; x<currentWeightArray.length; x++) {
@@ -188,8 +176,7 @@ public class MultiLayerPerceptron {
 		
 
 		
-		
-		double correctOutput = 0.9;
+		double correctOutput = trainingExpected.get(0).get(0, 0);
 
 		HashMap<Integer, SimpleMatrix> deltaMatrices = new HashMap<Integer, SimpleMatrix>(); // Contains all delta
 																								// values
@@ -198,78 +185,99 @@ public class MultiLayerPerceptron {
 		// compared to represents the amount of epochs we use
 
 		// Every time allLayers.get(0) is referenced, replace with currentInput
-		System.out.println("TrainingSize " + allInputs.getTrainingSize());
-		for (int i = 0; i < (2000); i++) {
-			//SimpleMatrix currentRow = allInputs.getTrainingExpected().get(x);
-
-			
-			
-			}
-		allLayers.get(0).print();	
-
 		
-		for(int i = 0; i<2000; i++) {
+		for (int i = 0; i<10000; i++) {						
 			
-			allLayers = forwardPass(allLayers, neuralNetwork);
-			// allLayers.get(networkSize).print();
+			
 
-			// In this for loop we calculate the deltas for each layer - We use start from 1
-			// as we dont calculate deltas for the input layer
-			for (int j = networkSize; j >= 1; j--) {
-				// We have to calculate the delta of the output node differently
-				if (j == networkSize) {
-					double[][] currentDeltaArray = { { (correctOutput - allLayers.get(j).get(0, 0))
-							* (allLayers.get(j).get(0, 0) * (1 - allLayers.get(j).get(0, 0))) } };
-					deltaMatrices.put(j, new SimpleMatrix(currentDeltaArray));
-				} else {
+			for(int x = 0; x < allInputs.getTrainingSize(); x++) {     
+				// allLayers.get(0) represents the input layer, we want to change this each time we loop
+				correctOutput = trainingExpected.get(x).get(0, 0);
+				//trainingExpected.get(x).print();
+				//System.out.println(correctOutput);
+				allLayers.set(0, trainingData.get(x));						
 
-					SimpleMatrix currentLayerDifferential = firstDifferential(allLayers.get(j).copy()); // We get a copy
-																										// as to not
-																										// modify the
-																										// original
-																										// structure
+				allLayers = forwardPass(allLayers, neuralNetwork);
 
-					deltaMatrices.put(j, deltaVal(currentLayerDifferential, neuralNetwork.getWeights(j),
-							deltaMatrices.get(networkSize))); // Calculating based on the final delta matrix, we want to
-																// calculate the previous one
+				// In this for loop we calculate the deltas for each layer - We use start from 1
+				// as we dont calculate deltas for the input layer
+				for (int j = networkSize; j >= 1; j--) {
+					//System.out.println(j);
+					// We have to calculate the delta of the output node differently
+					if (j == networkSize) {
+						double[][] currentDeltaArray = { { (correctOutput - allLayers.get(j).get(0, 0))
+								* (allLayers.get(j).get(0, 0) * (1 - allLayers.get(j).get(0, 0))) } };
+						deltaMatrices.put(j, new SimpleMatrix(currentDeltaArray));
+						
+						
+					} else {
+						//We get a copy as to not modify the original structure
+						SimpleMatrix currentLayerDifferential = firstDifferential(allLayers.get(j).copy()); 
+						deltaMatrices.put(j, deltaVal(currentLayerDifferential, neuralNetwork.getWeights(j),
+								deltaMatrices.get(networkSize))); // Calculating based on the final delta matrix, we want to
+																	// calculate the previous one
+
+					}
 
 				}
 
+				/*
+				 * Updates the weight and biases of the neural network based on the delta values
+				 * worked out New weight: Old Weight + (Step Size * currentDelta * input) New
+				 * bias: Old Bias + (Step Size * currentDelta)
+				 */
+
+				neuralNetwork = updateValues(networkSize, neuralNetwork, allLayers, stepSize, deltaMatrices);
+
+				// After doing back propagation above, the program re-does the forward pass with updated values				
+				//trainingExpected.get(x)
+				//allLayers.get(networkSize).print();
+
 			}
-
-			/*
-			 * Updates the weight and biases of the neural network based on the delta values
-			 * worked out New weight: Old Weight + (Step Size * currentDelta * input) New
-			 * bias: Old Bias + (Step Size * currentDelta)
-			 */
-
-			neuralNetwork = updateValues(networkSize, neuralNetwork, allLayers, stepSize, deltaMatrices);
-
-			// After doing back propagation above, the program re-does the forward pass with
-			// updated values
-
-			// Gives us the output of the network for our current run
-
 			
-
+			
+			
 		}
-		allLayers = forwardPass(allLayers, neuralNetwork);
-
-		SimpleMatrix output = allLayers.get(networkSize);
-		output = destandardise(output, 1, 0);
-		output.print();
 		
-		long trainingEndTime = System.nanoTime();
-		System.out.println("Took "+(trainingEndTime - trainingStartTime)/1000000 + " ms"); 
+		double[][] array = {{9.41, 4.363, 7.925, 23.47, 2.4, 24.8, 61.6}};
+		SimpleMatrix quicktest = new SimpleMatrix(array);
+		ArrayList<SimpleMatrix> standardiseStuff = new ArrayList<SimpleMatrix>();
+		standardiseStuff.add(quicktest);
+		
+		standardiseStuff = standardise(standardiseStuff, trainingTotalMax, trainingTotalMin);
 
+		System.out.println("done!");
+		
+		/*
+		 * 			trainingData = deStandardise(trainingData, trainingTotalMax, trainingTotalMin);
+		 *			trainingExpected = deStandardise(trainingExpected, trainingPredictandMax, trainingPredictandMin);
+		 */
+		
+		
+		System.out.println("TESTING!!!!!!!!!!!!!!!!!!!"); 
+
+
+		//quicktest.print();
+		System.out.println("TESTING!!!!!!!!!!!!!!!!!!!"); 
+
+		
+		allLayers.set(0,  standardiseStuff.get(0));						
+		allLayers = forwardPass(allLayers, neuralNetwork);
+		System.out.println();
+		SimpleMatrix output = allLayers.get(networkSize);
+		output.print();
+		output = deStandardise(output, trainingPredictandMax[0], trainingPredictandMin[0]);
+		output.print();
+		long trainingEndTime = System.nanoTime();
+		System.out.println("Training finished in "+(trainingEndTime - trainingStartTime)/1000000 + "ms"); 
+		
 	}
 
 	private static ArrayList<SimpleMatrix> forwardPass(ArrayList<SimpleMatrix> layers, NeuralNetwork neuralNetwork) {
 
 		// Start from 1 because we don't perform operations on the input layer.
 		for (int i = 1; i < layers.size(); i++) {
-			layers.set(i, sigmoids(
-					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); // Range
+			layers.set(i, sigmoids(layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); // Range
 																													// of
 																													// i-1
 																													// for
@@ -297,6 +305,16 @@ public class MultiLayerPerceptron {
 		return input;
 	}
 
+	
+	public static SimpleMatrix standardise(SimpleMatrix input, double max, double min) {
+		DMatrixIterator it = input.iterator(false, 0, 0, input.numRows() - 1, input.numCols() - 1);
+
+		while (it.hasNext()) {
+			it.set((0.8 * (it.next() - min) / (max - min)) + 0.1);
+		}
+		return input;
+	}
+	
 	public static ArrayList<SimpleMatrix> deStandardise(ArrayList<SimpleMatrix> input, double[] max, double[] min) {
 
 		for (int i = 0; i < input.size(); i++) { // Loops through all rows in ArrayList
@@ -314,7 +332,7 @@ public class MultiLayerPerceptron {
 	}
 
 	// Un-standardises the matrix for the correct outputs
-	public static SimpleMatrix destandardise(SimpleMatrix input, int max, int min) {
+	public static SimpleMatrix deStandardise(SimpleMatrix input, double max, double min) {
 		DMatrixIterator it = input.iterator(false, 0, 0, input.numRows() - 1, input.numCols() - 1);
 
 		while (it.hasNext()) {
@@ -539,6 +557,7 @@ public class MultiLayerPerceptron {
 
 			}
 			allInputs.addTrainingSize(trainingSize);
+			workbook.close();
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
