@@ -12,10 +12,10 @@ public class ChartPlotter extends ApplicationFrame {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ChartPlotter(String title, String chartTitle, XYDataset dataSet) {
+	public ChartPlotter(String title, String chartTitle, XYDataset dataSet, String xAxis, String yAxis) {
 		super(title);
 
-		JFreeChart lineChart = ChartFactory.createXYLineChart(chartTitle, "Epochs", "Absolute Error", dataSet, PlotOrientation.VERTICAL, false, false, false);
+		JFreeChart lineChart = ChartFactory.createXYLineChart(chartTitle, xAxis, yAxis, dataSet, PlotOrientation.VERTICAL, false, false, false);
 		
 		//lineChart.getXYPlot().setRenderer(new XYSplineRenderer());
 		ChartPanel chartPanel = new ChartPanel(lineChart);

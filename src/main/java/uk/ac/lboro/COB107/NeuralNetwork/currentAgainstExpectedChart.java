@@ -9,6 +9,9 @@ import org.jfree.ui.ApplicationFrame;
 
 public class currentAgainstExpectedChart extends ApplicationFrame {
 
+	
+	private static final long serialVersionUID = 1L;
+
 	public currentAgainstExpectedChart(String title, String chartTitle, XYDataset dataSet) {
 		super(title);
 
