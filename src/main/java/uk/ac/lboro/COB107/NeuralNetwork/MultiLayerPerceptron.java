@@ -1,6 +1,7 @@
 package uk.ac.lboro.COB107.NeuralNetwork;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.ejml.data.DMatrixIterator;
@@ -18,14 +19,9 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RefineryUtilities;
-
-import tech.tablesaw.api.Table;
-import tech.tablesaw.columns.Column;
 
 public class MultiLayerPerceptron {
 
@@ -75,8 +71,7 @@ public class MultiLayerPerceptron {
 		ArrayList<SimpleMatrix> validationData = allInputs.getValidation();
 		ArrayList<SimpleMatrix> validationExpected = allInputs.getValidationExpected();
 
-		ArrayList<SimpleMatrix> testingData = allInputs.getTesting();
-		ArrayList<SimpleMatrix> testingExpected = allInputs.getTestingExpected();
+		
 
 		double[] trainingTotalMax = allInputs.getTrainingTotalMax();
 		double[] trainingTotalMin = allInputs.getTrainingTotalMin();
@@ -130,8 +125,6 @@ public class MultiLayerPerceptron {
 				layerSizes.add(6);
 			}
 		}
-
-		long trainingStartTime = System.nanoTime();
 
 		// Inbetween layer xi and xi+1, the weights must have xi (node amount) rows, and
 		// xi+1 (node amount) columns, so this calculates that. We calculate biases for
@@ -195,12 +188,12 @@ public class MultiLayerPerceptron {
 		// compared to represents the amount of epochs we use
 
 		// Every time allLayers.get(0) is referenced, replace with currentInput
-		int epochs = 100;
+		int epochs = 200;
 		double[] absoluteError = new double[epochs];
 		for (int i = 0; i < epochs; i++) {
 
 			double currentAbsolute = 0;
-			for (int x = 0; x <= allInputs.getTrainingSize(); x++) {
+			for (int x = 0; x <= allInputs.getTrainingSize(); x++) { 
 				// allLayers.get(0) represents the input layer, we want to change this each time
 				// we loop
 				correctOutput = trainingExpected.get(x).get(0, 0);
@@ -215,7 +208,6 @@ public class MultiLayerPerceptron {
 				if (tempAbsolute < 0) {
 					tempAbsolute = -tempAbsolute;
 				}
-				System.out.println(tempAbsolute);
 
 				currentAbsolute = currentAbsolute + tempAbsolute; // Gets the output and adds to absolute error
 				// In this for loop we calculate the deltas for each layer - We use start from 1
@@ -264,7 +256,6 @@ public class MultiLayerPerceptron {
 			Integer epochCast = (Integer) i;
 			Double absoluteCast = (Double) currentAbsolute; // Casts absolute to a compatible Double object
 			absoluteValues.add(epochCast, absoluteCast);
-			
 			
 
 		}
@@ -318,25 +309,78 @@ public class MultiLayerPerceptron {
 
 	    absoluteChart.setVisible( true );
 		
+	    //allLayers = forwardPass(allLayers, neuralNetwork);
 	    
+	    neuralNetwork.setAllLayers(allLayers);
+	    runTest(allInputs, neuralNetwork);
 	}
 
-	private static void runTest(ArrayList<SimpleMatrix> testingData) {
+	private static void runTest(inputData inputs, NeuralNetwork neuralNetwork) {
+		
+		ArrayList<SimpleMatrix> testingExpected = inputs.getTestingExpected();
+		ArrayList<SimpleMatrix> testingData = inputs.getTesting();
+		
+		double[] maxValueTotal = inputs.getTrainingTotalMax(); //We use training maxes and mins, as we arent meant to use testing ones
+		double[] minValueTotal = inputs.getTrainingTotalMin();
+		double[] maxValuePredictand = inputs.getTrainingPredictandMax();
+		double[] minValuePredictand = inputs.getTrainingPredictandMin();
 
+		
+		testingData = standardise(testingData, maxValueTotal, minValueTotal);
+		//testingExpected = standardise(testingExpected, maxValuePredictand, minValuePredictand);
+		ArrayList<SimpleMatrix>  allLayers = neuralNetwork.getAllLayers(); 
+		
+		
+		//allLayers.set(0, trainingData);
+
+		double[] expectedOutput = new double[inputs.getTestingSize()+1];
+		double[] currentOutput = new double[inputs.getTestingSize()+1];
+		
+		XYSeries CAESeries = new XYSeries("");  
+		
+		for (int i = 0; i <= inputs.getTestingSize(); i++) {
+			allLayers.set(0, testingData.get(i));
+			
+			allLayers = forwardPass(allLayers, neuralNetwork);
+			
+			deStandardise(allLayers.get(2), maxValuePredictand[0], minValuePredictand[0]);
+			expectedOutput[i] = testingExpected.get(i).get(0,0);
+			currentOutput[i] = allLayers.get(2).get(0, 0);
+			
+			//First value is expected (from dataset), 2nd is the programs prediction
+			CAESeries.add(testingExpected.get(i).get(0,0), allLayers.get(2).get(0, 0)); 
+			
+			standardise(allLayers.get(2), maxValuePredictand[0], minValuePredictand[0]);
+			
+			System.out.println("Expected Output " + expectedOutput[i]);
+			System.out.println("Current Output " + currentOutput[i]);
+			System.out.println("-----------------------------");
+		}
+		
+
+		
+		XYSeriesCollection currentAgainstExpected = new XYSeriesCollection();
+		currentAgainstExpected.addSeries(CAESeries);
+	    
+		currentAgainstExpectedChart absoluteChart = new currentAgainstExpectedChart("Expected", 
+	    		"Given",
+	    		currentAgainstExpected);
+		absoluteChart.pack();
+		RefineryUtilities.centerFrameOnScreen( absoluteChart );
+
+	    absoluteChart.setVisible( true );
+		
+		
 	}
 
 	private static ArrayList<SimpleMatrix> forwardPass(ArrayList<SimpleMatrix> layers, NeuralNetwork neuralNetwork) {
-
+		
+		
+		
 		// Start from 1 because we don't perform operations on the input layer.
 		for (int i = 1; i < layers.size(); i++) {
 			layers.set(i, sigmoids(
-					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); // Range
-			// of
-			// i-1
-			// for
-			// Weights
-			// and
-			// Biases
+					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); 
 		}
 
 		return layers;
@@ -420,7 +464,7 @@ public class MultiLayerPerceptron {
 		 * We want to get oldVal = oldVal + (stepSize*delta*input) This matrix
 		 * calculation works out these values
 		 */
-		// input.print();
+
 
 		return weight.plus(delta.transpose().mult(input).scale(stepSize).transpose());
 
@@ -486,8 +530,6 @@ public class MultiLayerPerceptron {
 			Sheet datatypeSheet = workbook.getSheetAt(0);
 
 			int width = datatypeSheet.getRow(0).getLastCellNum();
-			int depth = datatypeSheet.getLastRowNum() + 1; // Starts at 0 so we add 1
-			// System.out.println("Columns" + noOfColumns);
 
 			int datasetDeterminant = 1;
 
@@ -517,8 +559,8 @@ public class MultiLayerPerceptron {
 			Iterator<Row> widthIterator = datatypeSheet.iterator();
 
 			int trainingSize = 0;
+			int testingSize = 0;
 			while (widthIterator.hasNext()) {
-				// System.out.println(currentRowIndex);
 
 				Row currentRow = widthIterator.next();
 				Iterator<Cell> cellIterator = currentRow.iterator();
@@ -534,7 +576,7 @@ public class MultiLayerPerceptron {
 
 					Cell currentCell = cellIterator.next();
 
-					if (i == width - 1) {
+					if (i == width - 1) { //if final column (expected output)
 						double currentVal = currentCell.getNumericCellValue();
 						currentRowPredictedArray[0][0] = currentVal;
 
@@ -543,7 +585,7 @@ public class MultiLayerPerceptron {
 																										// value to
 																										// current to
 																										// check for max
-							trainingSize++;
+							
 							predictandMinTraining[0] = Math.min(predictandMinTraining[0], currentVal); // Compares last
 																										// value to
 																										// current to
@@ -567,7 +609,7 @@ public class MultiLayerPerceptron {
 						double currentVal = currentCell.getNumericCellValue();
 						currentRowArray[0][i] = currentVal;
 
-						if (datasetDeterminant <= 4) { // First 3 variables go training
+						if (datasetDeterminant <= 3) { // First 3 variables go training
 							totalRowMaxTraining[i] = Math.max(totalRowMaxTraining[i], currentVal); // Compares last
 																									// value to current
 																									// to check for max
@@ -598,19 +640,22 @@ public class MultiLayerPerceptron {
 				SimpleMatrix currentRowMatrix = new SimpleMatrix(currentRowArray);
 				SimpleMatrix currentRowPredictedMatrix = new SimpleMatrix(currentRowPredictedArray);
 
-				if (datasetDeterminant <= 4) { // First 3 variables go training
+				if (datasetDeterminant <= 3) { // First 3 variables go training
 					allInputs.addTraining(currentRowMatrix, currentRowPredictedMatrix);
 					datasetDeterminant++;
+					trainingSize++;
 				} else if (datasetDeterminant <= 4) { // Next row for validation
 					allInputs.addValidation(currentRowMatrix, currentRowPredictedMatrix);
 					datasetDeterminant++;
 				} else { // Final row for testing data, then we reset the index to repeat the spread
 					allInputs.addTesting(currentRowMatrix, currentRowPredictedMatrix);
 					datasetDeterminant = 1;
+					testingSize++;
 				}
 
 			}
-			allInputs.addTrainingSize(trainingSize);
+			allInputs.addTrainingSize(trainingSize-1);
+			allInputs.addTestingSize(testingSize-1);
 			workbook.close();
 
 		} catch (FileNotFoundException e) {
