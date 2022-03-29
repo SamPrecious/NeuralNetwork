@@ -1,10 +1,11 @@
 package uk.ac.lboro.COB107.NeuralNetwork;
 
+import java.io.Serializable; 
 import java.util.ArrayList;
 
 import org.ejml.simple.SimpleMatrix;
 
-public class NeuralNetwork {
+public class NeuralNetwork implements Serializable{ //Serializable allows us to write the Neural Network to a file
 
 	// multiple layers. Each layer has x weights relating to nodes
 
