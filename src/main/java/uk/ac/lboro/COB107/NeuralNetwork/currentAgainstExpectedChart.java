@@ -12,10 +12,10 @@ public class currentAgainstExpectedChart extends ApplicationFrame {
 	
 	private static final long serialVersionUID = 1L;
 
-	public currentAgainstExpectedChart(String title, String chartTitle, XYDataset dataSet) {
+	public currentAgainstExpectedChart(String title, XYDataset dataSet) {
 		super(title);
 
-		JFreeChart lineChart = ChartFactory.createScatterPlot(chartTitle, "Expected", "Given", dataSet,
+		JFreeChart lineChart = ChartFactory.createScatterPlot("Expected vs Given", "Expected", "Given", dataSet,
 				PlotOrientation.VERTICAL, false, false, false);
 
 		// lineChart.getXYPlot().setRenderer(new XYSplineRenderer());

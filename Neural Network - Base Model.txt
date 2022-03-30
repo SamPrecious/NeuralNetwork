@@ -36,7 +36,6 @@ public class MultiLayerPerceptron {
 	}
 
 
-	@SuppressWarnings("unchecked")
 	public static void predict(inputData allInputs) {
 		
 		Scanner scan = new Scanner(System.in);
@@ -48,7 +47,7 @@ public class MultiLayerPerceptron {
 		
 		int networkSize = hiddenLayerSize+1; //This is the amount of layers excluding the input layer (so +1 for output)
 
-		double stepSize = 0.3; //Learning Rate
+		double stepSize = 0.1; //Learning Rate
 
 		ArrayList<SimpleMatrix> trainingData = allInputs.getTraining();
 		ArrayList<SimpleMatrix> trainingExpected = allInputs.getTrainingExpected();
@@ -94,6 +93,7 @@ public class MultiLayerPerceptron {
 		double inputs = trainingData.get(0).numCols();
 		for (int i = 1; i < layerSizes.size(); i++) {
 			int column = layerSizes.get(i);
+
 			double[][] currentWeightArray = new double[row][column];
 
 			for (int x = 0; x < currentWeightArray.length; x++) {
@@ -131,7 +131,8 @@ public class MultiLayerPerceptron {
 
 		double correctOutput = trainingExpected.get(0).get(0, 0);
 
-		HashMap<Integer, SimpleMatrix> deltaMatrices = new HashMap<Integer, SimpleMatrix>(); 
+		HashMap<Integer, SimpleMatrix> deltaMatrices = new HashMap<Integer, SimpleMatrix>(); // Contains all delta
+																								// values
 
 		XYSeries absoluteValues = new XYSeries("Absolute Values");
 		XYSeries MSRESeries = new XYSeries("Mean Squared Relative Errors");
@@ -142,14 +143,12 @@ public class MultiLayerPerceptron {
 		// Every time allLayers.get(0) is referenced, replace with currentInput
 		
 		
-		scan.close();
-
-		
 		int errorIncreasing = 0; //This is to check for overfitting with the Validation set
 		double lastMSREVal = Double.MAX_VALUE;
-		int epochs = 10000;
-		
-		long startTime = System.nanoTime();
+		scan.close();
+
+		int epochs = 500;
+		double[] absoluteError = new double[epochs];
 		for (int i = 0; i < epochs; i++) {
 			double currentAbsolute = 0;
 			for (int x = 0; x <= allInputs.getTrainingSize(); x++) { 
@@ -158,7 +157,16 @@ public class MultiLayerPerceptron {
 				allLayers.set(0, trainingData.get(x));
 
 				allLayers = forwardPass(allLayers, neuralNetwork);
-								
+				
+				
+				double tempAbsolute = correctOutput - allLayers.get(networkSize).get(0, 0);
+				
+				if (tempAbsolute < 0) {
+					tempAbsolute = -tempAbsolute;
+				}
+
+				//Absolute error for this epoch
+				currentAbsolute = currentAbsolute + tempAbsolute;
 				
 				// Here we calculate deltas per layers, finish at 1 as we dont do input layer
 				for (int j = networkSize; j >= 1; j--) {
@@ -166,8 +174,8 @@ public class MultiLayerPerceptron {
 					// We have to calculate the delta of the output node differently
 					if (j == networkSize) {
 						double[][] currentDeltaArray = { { (correctOutput - allLayers.get(j).get(0, 0))
-								* ((allLayers.get(j).get(0, 0) * (1 - allLayers.get(j).get(0, 0)))) } };  
-								//1 - Math.pow((allLayers.get(j).get(0, 0), 2)) <- tanh
+								* (allLayers.get(j).get(0, 0) * (1 - allLayers.get(j).get(0, 0))) } };
+						
 						deltaMatrices.put(j, new SimpleMatrix(currentDeltaArray));
 
 					} else {
@@ -187,37 +195,32 @@ public class MultiLayerPerceptron {
 				 * bias: Old Bias + (Step Size * currentDelta)
 				 */
 
-				neuralNetwork = updateValues(i, x, networkSize, neuralNetwork, allLayers, stepSize, deltaMatrices);
+				neuralNetwork = updateValues(networkSize, neuralNetwork, allLayers, stepSize, deltaMatrices);
 
 				
 
 			}
-			neuralNetwork.setAllLayers(allLayers);
-			//Save current weight changes to last weight changes before wiping current changes for next iteration
-			neuralNetwork.setLastWeightChanges((ArrayList<ArrayList<SimpleMatrix>>) neuralNetwork.getCurrentWeightChanges().clone());
-			neuralNetwork.clearCurrentWeightChanges();
-
 			
-			neuralNetwork.setLastBiasChanges((ArrayList<ArrayList<SimpleMatrix>>) neuralNetwork.getCurrentBiasChanges().clone());
-			neuralNetwork.clearCurrentBiasChanges();
+			//Here we calculate absolute error, and add it to the dataset
+			currentAbsolute = currentAbsolute / (allInputs.getTrainingSize() + 1);
+			
+			absoluteError[i] = currentAbsolute;
 			
 			
-			//neuralNetwork.
-			//Calculates error for this epoch
-			double currentAbsoluteError = absoluteErrorCalc(allInputs, neuralNetwork, networkSize);
+			Double absoluteCast = (Double) currentAbsolute; // Casts absolute to a compatible Double object
+			absoluteValues.add(i, absoluteCast);
 			
 			
-			Double currentAbsoluteCast = (Double) currentAbsoluteError;
-			absoluteValues.add(i, currentAbsoluteCast);					
 			
 			if(i % 5 == 0) {
+			    neuralNetwork.setAllLayers(allLayers);
 				
 				double currentMSREVal = checkValidation(allInputs, neuralNetwork, networkSize);
 				MSRESeries.add(i, currentMSREVal);
 				if(currentMSREVal>lastMSREVal) { //Error is increasing 
 					errorIncreasing++;
 					if(errorIncreasing == 4) { //If the MSRE goes up much in the last few epochs, break early
-						//System.out.println("Breaking");
+						System.out.println("Breaking");
 						break;
 					}
 				}else {
@@ -230,11 +233,7 @@ public class MultiLayerPerceptron {
 			}
 			
 		}		
-		
-		long endTime = System.nanoTime();
-		
-		System.out.println("The system took " + (endTime - startTime) / 1000000 +" milliseconds to complete");
-		
+				
 	    XYSeriesCollection absoluteDataSet = new XYSeriesCollection();
 	    absoluteDataSet.addSeries(absoluteValues);
 		
@@ -264,35 +263,7 @@ public class MultiLayerPerceptron {
 	}
 	
 	
-	public static double absoluteErrorCalc(inputData inputs, NeuralNetwork neuralNetwork, int networkSize) {
-		ArrayList<SimpleMatrix> trainingData = inputs.getTraining();
-		ArrayList<SimpleMatrix> trainingExpected = inputs.getTrainingExpected();
-		ArrayList<SimpleMatrix> allLayers = neuralNetwork.getAllLayers(); 
-		
-		double currentAbsolute = 0;
-
-		for(int i = 0; i<=inputs.getTrainingSize(); i++) {
-			allLayers.set(0, trainingData.get(i));			
-			allLayers = forwardPass(allLayers, neuralNetwork);
-			
-			double correctOutput = trainingExpected.get(i).get(0, 0);
-			//tempAbsolute is the absolute for this cycle
-			double tempAbsolute = correctOutput - allLayers.get(networkSize).get(0, 0);
-			
-			if (tempAbsolute < 0) {
-				tempAbsolute = -tempAbsolute;
-			}
-			
-			
-			currentAbsolute = currentAbsolute + tempAbsolute;
-			
-		}
-		//Calculate average absolute error for this epoch
-		currentAbsolute = currentAbsolute/inputs.getTrainingSize();
-		
-		return currentAbsolute;
-		
-	}
+	
 	
 	//Here we check the validation set and return the MSRE for this iteration
 	public static double checkValidation(inputData inputs, NeuralNetwork neuralNetwork, int networkSize) {
@@ -316,9 +287,9 @@ public class MultiLayerPerceptron {
 			allLayers.set(0, validationData.get(i));			
 			allLayers = forwardPass(allLayers, neuralNetwork);
 			
-			deStandardise(allLayers.get(networkSize), validationPredictandMax[0], validationPredictandMin[0]);
+			deStandardise(allLayers.get(2), validationPredictandMax[0], validationPredictandMin[0]);
 			MSREsum = MSREsum + Math.pow(((validationExpected.get(i).get(0,0) - allLayers.get(networkSize).get(0, 0))/allLayers.get(networkSize).get(0, 0)), 2);
-			standardise(allLayers.get(networkSize), validationPredictandMax[0], validationPredictandMin[0]);
+			standardise(allLayers.get(2), validationPredictandMax[0], validationPredictandMin[0]);
 			
 
 		}
@@ -356,14 +327,16 @@ public class MultiLayerPerceptron {
 		XYSeriesCollection currentAgainstExpected = new XYSeriesCollection();
 		currentAgainstExpected.addSeries(CAESeries);
 		
-		currentAgainstExpectedChart absoluteChart = new currentAgainstExpectedChart("Expected", currentAgainstExpected);
+		currentAgainstExpectedChart absoluteChart = new currentAgainstExpectedChart("Expected", 
+	    		"Given",
+	    		currentAgainstExpected);
 		absoluteChart.pack();
 		RefineryUtilities.centerFrameOnScreen( absoluteChart );
 
 	    absoluteChart.setVisible( true );	
 		
 	}
-	
+
 	private static ArrayList<SimpleMatrix> forwardPass(ArrayList<SimpleMatrix> layers, NeuralNetwork neuralNetwork) {		
 		
 		// Start from 1 because we don't perform operations on the input layer.
@@ -371,6 +344,7 @@ public class MultiLayerPerceptron {
 			layers.set(i, sigmoids(
 					layers.get(i - 1).mult(neuralNetwork.getWeights(i - 1)).plus(neuralNetwork.getBiases(i - 1)))); 
 		}
+
 		return layers;
 	}
 
@@ -430,49 +404,16 @@ public class MultiLayerPerceptron {
 	
 	
 	//Updates the values in the neural network
-	public static NeuralNetwork updateValues(int currentEpoch, int currentDataRow, int networkSize, NeuralNetwork neuralNetwork,
+	public static NeuralNetwork updateValues(int networkSize, NeuralNetwork neuralNetwork,
 			ArrayList<SimpleMatrix> allLayers, double stepSize, HashMap<Integer, SimpleMatrix> deltaMatrices) {
-		
-		ArrayList<SimpleMatrix> currentWeightChanges = new ArrayList<SimpleMatrix>();
-		ArrayList<SimpleMatrix> currentBiasChanges = new ArrayList<SimpleMatrix>();
-
-		
-		double momentumMultiplier = 0.8;
 		for (int i = 0; i < networkSize; i++) {
-			
-			SimpleMatrix currentWeightChange = deltaMatrices.get(i + 1).transpose().mult(allLayers.get(i)).scale(stepSize).transpose();
-			
-			SimpleMatrix currentBiasChange = deltaMatrices.get(i + 1).scale(stepSize);
 
-			if(i == 0 && currentEpoch == 0) {
-				
-
-			}
-			if(currentEpoch > 0) { /* This is commented out, but if you remove this comment you will be able to use the momentum calculations in the program
-				SimpleMatrix lastWeightChanges = neuralNetwork.getLastWeightChanges().get(currentDataRow).get(i).scale(momentumMultiplier);				
-				currentWeightChange = currentWeightChange.plus(lastWeightChanges);
-				
-				SimpleMatrix lastBiasChanges = neuralNetwork.getLastBiasChanges().get(currentDataRow).get(i).scale(momentumMultiplier);				
-				currentBiasChange = currentBiasChange.plus(lastBiasChanges);*/
-			}
-			//System.out.println(i);						
-			currentWeightChanges.add(currentWeightChange);
-			currentBiasChanges.add(currentBiasChange);
-			
-			
-			SimpleMatrix weightChange = neuralNetwork.getWeights(i)
-					.plus(currentWeightChange);
-			
-			SimpleMatrix biasChange = neuralNetwork.getBiases(i)
-					.plus(currentBiasChange);
-			
-			neuralNetwork.setWeights(i, weightChange);
-			neuralNetwork.setBiases(i, biasChange);
+			deltaMatrices.get(i + 1).transpose().mult(allLayers.get(i));
+			neuralNetwork.setWeights(i, neuralNetwork.getWeights(i)
+					.plus(deltaMatrices.get(i + 1).transpose().mult(allLayers.get(i)).scale(stepSize).transpose()));
+			neuralNetwork.setBiases(i, neuralNetwork.getBiases(i).plus(deltaMatrices.get(i + 1).scale(stepSize)));
 		}
-		
-		neuralNetwork.addCurrentWeightChanges(currentWeightChanges);
-		neuralNetwork.addCurrentBiasChanges(currentBiasChanges);
-		//neuralNetwork.getCurrentWeightChanges().get(0).get(0).print();
+
 		return neuralNetwork;
 	}
 
@@ -500,20 +441,6 @@ public class MultiLayerPerceptron {
 
 		return m;
 	}
-	
-	//Applies tanh across entire matrix
-	private static SimpleMatrix tan(SimpleMatrix m) {
-		DMatrixIterator it = m.iterator(false, 0, 0, m.numRows() - 1, m.numCols() - 1);
-
-			// Iterates through the matrix and applies tanh
-		while (it.hasNext()) {
-			double x = it.next();
-			it.set((Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x)));
-		}
-
-		return m;
-	}
-		
 
 	//Calculates the delta values
 	public static SimpleMatrix deltaVal(SimpleMatrix currentDifferentialMatrix, SimpleMatrix weights,
@@ -536,11 +463,11 @@ public class MultiLayerPerceptron {
 
 	private static SimpleMatrix firstDifferential(SimpleMatrix currentLayer) {
 		DMatrixIterator it = currentLayer.iterator(false, 0, 0, currentLayer.numRows() - 1, currentLayer.numCols() - 1);
-		// Iterates through the matrix and applies sigmoid/tanh
-		
+
+		// Iterates through the matrix and applies sigmoid
 		while (it.hasNext()) {
 			double curVal = it.next();
-			it.set(curVal * (1 - curVal));   //1 - Math.pow(curVal, 2) <- for sigmoid  
+			it.set(curVal * (1 - curVal));
 		}
 
 		return currentLayer;

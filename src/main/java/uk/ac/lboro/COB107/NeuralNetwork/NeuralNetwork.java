@@ -13,7 +13,13 @@ public class NeuralNetwork implements Serializable{ //Serializable allows us to 
 
 	private ArrayList<SimpleMatrix> allBiases = new ArrayList<SimpleMatrix>();
 	private ArrayList<SimpleMatrix> allWeights = new ArrayList<SimpleMatrix>();
+	private ArrayList<ArrayList<SimpleMatrix>> lastWeightChanges = new ArrayList<ArrayList<SimpleMatrix>>();
+	private ArrayList<ArrayList<SimpleMatrix>> currentWeightChanges = new ArrayList<ArrayList<SimpleMatrix>>();
 
+	private ArrayList<ArrayList<SimpleMatrix>> lastBiasChanges = new ArrayList<ArrayList<SimpleMatrix>>();
+	private ArrayList<ArrayList<SimpleMatrix>> currentBiasChanges = new ArrayList<ArrayList<SimpleMatrix>>();
+
+	
 	public void addBiases(SimpleMatrix bias) {
 		allBiases.add(bias);
 	}
@@ -30,6 +36,56 @@ public class NeuralNetwork implements Serializable{ //Serializable allows us to 
 		this.allLayers = allLayers;
 	}
 
+	public void setLastWeightChanges(ArrayList<ArrayList<SimpleMatrix>> weightChanges) {
+		this.lastWeightChanges = weightChanges;
+	}
+	
+	
+	public ArrayList<ArrayList<SimpleMatrix>> getLastWeightChanges(){
+		return lastWeightChanges;
+	}
+	
+	public void setLastBiasChanges(ArrayList<ArrayList<SimpleMatrix>> lastBiasChanges) {
+		this.lastBiasChanges = lastBiasChanges;
+	}
+	
+	
+	public ArrayList<ArrayList<SimpleMatrix>> getLastBiasChanges(){
+		return lastBiasChanges;
+	}
+	
+	
+	public void clearCurrentWeightChanges() {
+		currentWeightChanges.clear();
+	}
+	
+	public void clearCurrentBiasChanges() {
+		currentBiasChanges.clear();
+	}
+	
+	public void setCurrentWeightChanges(ArrayList<ArrayList<SimpleMatrix>> weightChanges) {
+		this.currentWeightChanges = weightChanges;
+	}
+	
+	public void setCurrentBiasChanges(ArrayList<ArrayList<SimpleMatrix>> biasChanges) {
+		this.currentBiasChanges = biasChanges;
+	}
+	
+	public void addCurrentWeightChanges(ArrayList<SimpleMatrix> weightChanges) {
+		this.currentWeightChanges.add(weightChanges);
+	}
+	
+	public void addCurrentBiasChanges(ArrayList<SimpleMatrix> biasChanges) {
+		this.currentBiasChanges.add(biasChanges);
+	}
+	
+	public ArrayList<ArrayList<SimpleMatrix>> getCurrentWeightChanges(){
+		return currentWeightChanges;
+	}
+	public ArrayList<ArrayList<SimpleMatrix>> getCurrentBiasChanges(){
+		return currentBiasChanges;
+	}
+	
 	public void setBiases(int index, SimpleMatrix bias) {
 		allBiases.set(index, bias);
 	}
